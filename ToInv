@@ -11,10 +11,18 @@ function findRemote(RemoteType)
     return Remote
 end
 
+function FindBackground()
+    for _,inst in pairs(l__LocalPlayer__1.PlayerGui:GetDescendants()) do
+        if(inst.Name == 'Body' or inst.Name == 'Inv' or inst.Name == 'Equipped') then
+            return inst.Parent
+        end
+    end
+end
+
 function AddToDataStore()
     local v40 = require(l__LocalPlayer__1.Character:WaitForChild("Animations"))
     local v41 = require(l__LocalPlayer__1.Character:WaitForChild("Modifiers"))
-    local Background = l__LocalPlayer__1.PlayerGui.Character.Profile.Inventory.Background
+    local Background = FindBackground()
     local Equipped = Background:WaitForChild("Equipped")
     local l__Body__44 = Background:WaitForChild("Body")
     local l__Inv__45 = Background:WaitForChild("Inv")
@@ -130,7 +138,7 @@ end
 local MainFunction = {}
 
 function MainFunction.AddToInvLOL(p18)
-    local Background = l__LocalPlayer__1.PlayerGui.Character.Profile.Inventory.Background
+    local Background = FindBackground()
     local Inv = Background:WaitForChild("Inv")
     local v125 = false
     if not _G.databusy and true then
@@ -147,7 +155,9 @@ function MainFunction.AddToInvLOL(p18)
                 v126.Parent = v129
                 v127.Parent = v129
                 v127.Position = v127.Position - UDim2.new(0, 0, 0.1, 0)
-                v129:FindFirstChild("Image").Image = v126.Decal.Image
+                pcall(function()
+                    v129:FindFirstChild("Image").Image = v126.Decal.Image
+                end)
                 v129.Stack.Visible = false
                 if v126.Configuration:FindFirstChild("Stack") then
                     v129.Stack.Text = v126.Configuration.Stack.Value
