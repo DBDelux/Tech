@@ -1,0 +1,123 @@
+local LocalPlayer = game.Players.LocalPlayer
+
+local Utility = {Enabled = true, Paused = false}
+
+local append, concat, floor, abs = table.insert, table.concat, math.floor, math.abs
+local num = {
+    "one",
+    "two",
+    "three",
+    "four",
+    "five",
+    "six",
+    "seven",
+    "eight",
+    "nine",
+    "ten",
+    "eleven",
+    "twelve",
+    "thirteen",
+    "fourteen",
+    "fifteen",
+    "sixteen",
+    "seventeen",
+    "eighteen",
+    "nineteen"
+}
+local tens = {"twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety"}
+local bases = {
+    {1000, " thousand"},
+    {100, " hundred"}
+}
+
+function Utility:IntegerNumberInWords(n)
+    local str = {}
+    if n < 0 then
+        append(str, "minus")
+    end
+    n = floor(abs(n))
+    if n == 0 then
+        return "zero"
+    end
+    local AND
+    for _, base in ipairs(bases) do
+        local value = base[1]
+        if n >= value then
+            append(str, IntegerNumberInWords(n / value) .. base[2])
+            n, AND = n % value, insert_word_AND or nil
+        end
+    end
+    if n > 0 then
+        append(str, AND and "and")
+        append(str, num[n] or tens[floor(n / 10) - 1] .. (n % 10 ~= 0 and " " .. num[n % 10] or ""))
+    end
+    return concat(str, " ")
+end
+
+function Utility:Chat(t)
+    game.ReplicatedStorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer(t, 'All')
+end
+
+function Utility:Jump()
+    LocalPlayer.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+end
+
+function Utility:GenerateSet(Type, Initial, Goal)
+    local Set = {}
+    for n=Initial,Goal do
+        if(Type == 1) then
+            Set[#Set + 1] = self:IntegerNumberInWords(n)
+        elseif(Type == 2) then
+            local Word = self:IntegerNumberInWords(n)
+            for L in Word:gmatch('[%a]') do
+                Set[#Set + 1] = L
+            end
+            Set[#Set + 1] = Word
+        end
+    end
+    return Set
+end
+
+function Utility:SetIndex(x)
+    self.Index = x
+end
+
+function Utility:Start(settings)
+    local Type = settings.Type or 1
+    local Goal = settings.Goal or 10
+    local Initial = settings.Initial or 1
+    local Delay = settings.Delay or 4
+    local Random = settings.Random or false
+    
+    local Set = Utility:GenerateSet(Type, Initial, Goal)
+    self.Remaining = #Set
+    self.Index = 1
+    self.Enabled = true
+    
+    while self.Enabled and self.Remaining > 0 do
+        if(not self.Paused) then
+            self:Chat(Set[self.Index])
+            spawn(function()
+                task.wait(0.2)
+                self:Jump()
+            end)
+            self:SetIndex(self.Index + 1)
+            self.Remaining = self.Remaining - 1
+        end
+        task.wait(Delay + (Random and math.random(-1,1) or 0))
+    end
+end
+
+function Utility:Stop()
+    self.Enabled = false
+end
+
+function Utility:Pause()
+    self.Paused = true
+end
+
+function Utility:Resume()
+    self.Paused = false
+end
+
+return Utility
