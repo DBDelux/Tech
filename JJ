@@ -1,6 +1,6 @@
 local LocalPlayer = game.Players.LocalPlayer
 
-local Utility = {Enabled = true, Paused = false}
+local Utility = {Enabled = false, Paused = false}
 
 local append, concat, floor, abs = table.insert, table.concat, math.floor, math.abs
 local num = {
