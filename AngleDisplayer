@@ -89,11 +89,4 @@ function Angle:Display(Player, degrees, length)
     end)
 end
 
-local new = Angle
-
-new:Display(game.Players.LocalPlayer, math.deg(115), 5)
-wait(5)
-new:AdjustDegrees(math.deg(190))
-wait(5)
-new:StopDisplayingAll()
-
+return Angle
