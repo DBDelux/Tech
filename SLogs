@@ -1,0 +1,30 @@
+local SLogs = {Spoofs = {}}
+
+function SLogs:ExistInLogs(Player)
+    return self.Spoofs[Player.UserId] or false
+end
+
+function SLogs:AddPlayer(Player)
+    if(not self:ExistInLogs(Player)) then
+        self.Spoofs[Player.UserId] = Player
+    end
+end
+
+function SLogs:RemovePlayer(Player)
+    self.Spoofs[Player.UserId] = nil
+end
+
+function SLogs:Clean(IgnoreEnemy)
+    for _, Player in pairs(self.Spoofs) do
+        if((IgnoreEnemy and Player.Team ~= LocalPlayer.Team) or true) then
+            if(game.Players:FindFirstChild(Player.Name)) then
+                pcall(function()
+                    SetBlockingState(Player, IsPlayerBlocking(Player))
+                end)
+            end
+            self:RemovePlayer(Player)
+        end
+    end
+end
+
+return SLogs
