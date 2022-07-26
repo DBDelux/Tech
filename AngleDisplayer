@@ -1,0 +1,99 @@
+local Angle = {Parts = {}, Displaying = {}}
+
+function Angle:AddToParts(Key, Part)
+    if(self.Parts[Key]) then
+        self.Parts[Key][#self.Parts[Key] + 1] = Part
+    else
+        self.Parts[Key] = {Part}
+    end
+end
+
+function Angle:RemoveFromParts(Key)
+    self.Parts[Key] = nil
+end
+
+function Angle:CreateAnglePart(Key, length)
+    local AnglePart = Instance.new('Part', workspace)
+    AnglePart.Anchored = true
+    AnglePart.CanCollide = false
+    AnglePart.Material = Enum.Material.Neon
+    AnglePart.Size = Vector3.new(0.03,0.03,length)
+    self:AddToParts(Key, AnglePart)
+    return AnglePart
+end
+
+function Angle:Destruct(Key)
+    if(self.Displaying[Key]) then
+        self.Displaying[Key] = false
+    end
+    if(self.Parts[Key]) then
+        for _, Part in pairs(self.Parts[Key]) do
+            Part:Destroy()
+        end
+    end
+end
+
+function Angle:AdjustDegrees(x)
+    self.Degrees = x
+end
+
+function Angle:AdjustLength(x)
+    self.Length = x
+end
+
+function Angle:IsPlaying(Player)
+    return self.Displaying[Player.UserId] and true or false
+end
+
+function Angle:StopDisplayingAll()
+    for Key, _ in pairs(self.Displaying) do
+        self:Destruct(Key)
+    end
+end
+
+function Angle:Display(Player, degrees, length)
+    local Part1 = Angle:CreateAnglePart(Player.UserId, length)
+    local Part2 = Angle:CreateAnglePart(Player.UserId, length)
+    local Part3 = Angle:CreateAnglePart(Player.UserId, length)
+    
+    self.Displaying[Player.UserId] = true
+    
+    spawn(function()
+        while self.Displaying[Player.UserId] and game.Players:FindFirstChild(Player.Name) do
+            local Degrees = self.Degrees or math.rad(degrees or 5)
+            local Length = self.Length or Length or 5
+            
+            local HRP = Player.Character.HumanoidRootPart
+            local Rotation1 = CFrame.Angles(0, Degrees, 0)
+            local Rotation2 = CFrame.Angles(0, -Degrees, 0)
+            local Offset = CFrame.new(0,0,2)
+            
+            Part1.CFrame = ((HRP.CFrame * Rotation1) * Offset)
+            Part2.CFrame = ((HRP.CFrame * Rotation2) * Offset)
+            
+            local Vertex1 = Vector3.new(Part1.Size.X/2, Part1.Size.Y/2, Part1.Size.Z/2)
+            local Vertex2 = Vector3.new(Part2.Size.X/2, Part2.Size.Y/2, Part2.Size.Z/2)
+            
+            local A = CFrame.new(Part1.CFrame:PointToWorldSpace(Vertex1)).Position
+            local B = CFrame.new(Part2.CFrame:PointToWorldSpace(Vertex2)).Position
+            
+            local Distance = (A-B).Magnitude
+            local midPosition = (A+B)/2
+            
+            Part3.Size = Vector3.new(0.03, 0.03, Distance)
+            Part3.CFrame = CFrame.lookAt(midPosition, B, Vector3.new(0,1,0)) * CFrame.new(0,0,0)
+            
+            game.RunService.Heartbeat:Wait()
+        end
+        Angle:Destruct(Player.UserId)
+    end)
+end
+
+local new = Angle
+
+new:Display(game.Players.LocalPlayer, math.deg(115), 5)
+wait(5)
+new:AdjustDegrees(math.deg(190))
+wait(5)
+new:StopDisplayingAll()
+
