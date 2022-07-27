@@ -13,7 +13,7 @@ end
 
 function FindBackground()
     for _,inst in pairs(l__LocalPlayer__1.PlayerGui:GetDescendants()) do
-        if((inst.Name == 'Inv' or inst.Name == 'Equipped') and inst.Parent.ClassName == 'Frame') then
+        if((inst.Name == 'Inv' or inst.Name == 'Equipped') and (inst.Parent.ClassName == 'Frame' or inst.Parent.ClassName == 'ImageLabel')) then
             return inst.Parent
         end
     end
@@ -148,22 +148,26 @@ function MainFunction.AddToInvLOL(p18)
         v126:WaitForChild("Configuration"):WaitForChild("ReplicatedStorageObject").Value = p18
         local v127 = v126.Interact:Clone()
         for v128 = 1, 21 do
-            local v129 = Inv[v128]
-            if not v129:FindFirstChild("Interact") and not v125 then
-                v125 = true
-                AddModifier(v126.Configuration.Weight, v126.Name)
-                v126.Parent = v129
-                v127.Parent = v129
-                v127.Position = v127.Position - UDim2.new(0, 0, 0.1, 0)
-                pcall(function()
-                    v129:FindFirstChild("Image").Image = v126.Decal.Image
-                end)
-                v129.Stack.Visible = false
-                if v126.Configuration:FindFirstChild("Stack") then
-                    v129.Stack.Text = v126.Configuration.Stack.Value
-                    v129.Stack.Visible = true
+            pcall(function()
+                local v129 = Inv[v128]
+                if not v129:FindFirstChild("Interact") and not v125 then
+                    v125 = true
+                    AddModifier(v126.Configuration.Weight, v126.Name)
+                    v126.Parent = v129
+                    v127.Parent = v129
+                    v127.Position = v127.Position - UDim2.new(0, 0, 0.1, 0)
+                    pcall(function()
+                        v129:FindFirstChild("Image").Image = v126.Decal.Image
+                        local Weight = Instance.new('NumberValue', l__LocalPlayer__1.Character.Modifiers.Weight)
+                        Weight.Name = p18.Name
+                    end)
+                    v129.Stack.Visible = false
+                    if v126.Configuration:FindFirstChild("Stack") then
+                        v129.Stack.Text = v126.Configuration.Stack.Value
+                        v129.Stack.Visible = true
+                    end
                 end
-            end
+            end)
         end
     end
     spawn(
