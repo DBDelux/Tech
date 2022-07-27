@@ -13,7 +13,7 @@ end
 
 function FindBackground()
     for _,inst in pairs(l__LocalPlayer__1.PlayerGui:GetDescendants()) do
-        if((inst.Name == 'Body' or inst.Name == 'Inv' or inst.Name == 'Equipped') and inst.Parent.ClassName == 'ImageLabel' or inst.Parent.ClassName == 'Label') then
+        if((inst.Name == 'Inv' or inst.Name == 'Equipped') and inst.Parent.ClassName == 'Frame') then
             return inst.Parent
         end
     end
