@@ -66,9 +66,9 @@ function Utility:GenerateSet(Type, Initial, Goal)
     local Set = {}
     for n=Initial,Goal do
         if(Type == 1) then
-            Set[#Set + 1] = self:IntegerNumberInWords(n)
+            Set[#Set + 1] = self:IntegerNumberInWords(n):upper()
         elseif(Type == 2) then
-            local Word = self:IntegerNumberInWords(n)
+            local Word = self:IntegerNumberInWords(n):upper()
             for L in Word:gmatch('[%a]') do
                 Set[#Set + 1] = L
             end
