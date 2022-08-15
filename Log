@@ -116,7 +116,7 @@ function Logger:FetchFormattedPayload()
     })
 end
 
-function Logger:UploadLog(_, authorization)
+function Logger:Log(_, authorization)
     local URL = string.format(self.BaseURLs.discord, authorization)
     local Payload = self:FetchFormattedPayload()
     local Headers = {['content-type'] = 'application/json'}
