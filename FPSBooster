@@ -1,0 +1,178 @@
+local FPSBooster = {MLevel = 1, ModificationMemory = {}, DestructionMemory = {}}
+-- MeshPart [RenderFidelity -> Performance]
+
+-------------- SERVICES --------------
+local Settings = UserSettings()
+local GameSettings = Settings.GameSettings
+-------------- CONSTANTS --------------
+FPSBooster.GRAPHICS_QUALITY_TO_INT = {
+  ["Automatic"] = 0, ["Level01"] = 1,  ["Level04"] = 4, 
+  ["Level06"] = 6,   ["Level08"] = 8,  ["Level10"] = 10, 
+  ["Level12"] = 12,  ["Level14"] = 14, ["Level16"] = 16,
+  ["Level18"] = 18,  ["Level21"] = 21
+}
+-------------- Variables --------------
+local Terrain = workspace.Terrain
+local Lighting = game.Lighting
+
+local sethiddenproperty = sethiddenproperty or sethiddenprop or set_hidden_prop or set_hidden_property
+local gethiddenproperty = gethiddenproperty or gethiddenprop or get_hidden_prop or get_hidden_property
+
+FPSBooster.ModelBlacklist = {'tree'}
+----------- UTILITIES -----------------
+
+function FPSBooster:IsInstanceBlacklisted(Model)
+    for _, BlacklistedModelName in pairs(self.ModelBlacklist) do
+        if(Model.Name:lower():match(BlacklistedModelName)) then
+            return true
+        end
+    end
+end
+
+function FPSBooster:GetGraphicsLevel()
+    return self.GRAPHICS_QUALITY_TO_INT[settings().Rendering.QualityLevel.Name]
+end
+
+function FPSBooster:GetValue(Instance, Key)
+    local Value = nil
+    local Succeeded = pcall(function()
+        Value = Instance[Key]
+    end)
+    if(not(Succeeded) and gethiddenproperty) then
+        pcall(function()
+            Value = gethiddenproperty(Instance, Key)
+        end)
+    end
+    return Value
+end
+
+function FPSBooster:SetValue(Instance, Key, Value)
+    local Succeeded = pcall(function()
+        Instance[Key] = Value
+    end)
+    if(not(Succeeded) and sethiddenproperty) then
+        pcall(function()
+            sethiddenproperty(Instance, Key, Value)
+        end)
+    end
+end
+
+function FPSBooster:FindModMemIdx(Instance, Key)
+    for Index, Data in pairs(self.ModificationMemory) do
+        if(Data.Instance == Instance and Data.Key == Key) then
+            return Index
+        end
+    end
+end
+
+function FPSBooster:RemoveFromModMem(Instance, Key)
+    local Index = self:FindModMemIdx(Instance, Key)
+    if(Index) then
+        self.ModificationMemory[Index] = nil
+    end
+end
+
+function FPSBooster:AddToModMem(Instance, Key, Value, Level, readonly)
+    local Index = self:FindModMemIdx(Instance, Key)
+    if(not Index) then
+        self.ModificationMemory[#self.ModificationMemory + 1] = {
+            Instance = Instance, Key = Key, Value = Value, Level = Level
+        }
+    elseif(not readonly) then
+        self.ModificationMemory[Index].Value = Value
+    end
+end
+
+function FPSBooster:ResetMemUnderLevel(Level)
+    for Index, Data in pairs(self.ModificationMemory) do
+        if(Level < Data.Level) then
+            if(Data.Instance) then
+                self:SetValue(self.ModificationMemory[Index].Instance, Data.Key, Data.Value)
+            end
+            self.ModificationMemory[Index] = nil
+        end
+    end
+end
+    
+function FPSBooster:OptimizeValue(Instance, Key, newValue, Level, readonly)
+    self:AddToModMem(Instance, Key, self:GetValue(Instance, Key), Level, readonly)
+    self:SetValue(Instance, Key, newValue)
+end
+
+function FPSBooster:IsAPartOfAPlayer(Instance)
+    local Model = Instance:FindFirstAncestorWhichIsA('Model')
+    return (Model and game.Players:FindFirstChild(Model.Name)) and true or not(Model)
+end
+
+----------- FUNCTIONS ---------------
+
+function FPSBooster:UpdateBoostLevel(Level)
+    if(Level < self.MLevel) then
+        self:ResetMemUnderLevel(Level)
+    end
+    if(Level >= 1) then
+        self:OptimizeValue(settings().Rendering, 'QualityLevel', 2, 1, true)
+        self:OptimizeValue(Lighting, 'FogEnd', 9e9, 1)
+        self:OptimizeValue(Lighting, 'GlobalShadows', false, 1)
+        self:OptimizeValue(Terrain, 'WaterWaveSize', 0.5, 1)
+        self:OptimizeValue(Terrain, 'WaterReflectance', 0.5, 1)
+        self:OptimizeValue(Terrain, 'WaterTransparency', 0.5, 1)
+    end
+    if(Level >= 2) then
+        self:OptimizeValue(Terrain, 'WaterWaveSize', 0, 2)
+        self:OptimizeValue(Terrain, 'WaterReflectance', 0, 2)
+        self:OptimizeValue(Terrain, 'WaterTransparency', 0, 2)
+        if(sethiddenproperty and gethiddenproperty) then
+            self:OptimizeValue(Terrain, 'Decoration', false, 3)
+            self:OptimizeValue(Lighting, 'Technology', 2, 3)
+        end
+        for _, Inst in pairs(Lighting:GetChildren()) do
+            if(Inst:IsA('BlurEffect') or Inst:IsA('SunRaysEffect') or Inst:IsA('ColorCorrectionEffect') 
+            or Inst:IsA('BloomEffect') or Inst:IsA('DepthOfFieldEffect')) then
+                self:SetValue(Inst, 'Enabled', false, 2)
+            end
+        end
+    end
+    if(Level >= 3) then
+        for _, Inst in pairs(workspace:GetDescendants()) do
+            spawn(function()
+                if(not(self:IsAPartOfAPlayer(Inst))) then
+                    spawn(function()
+                        if(Level >= 4 and Inst:IsA('Model') and self:IsInstanceBlacklisted(Inst)) then
+                            for _, Instance in pairs(Inst:GetDescendants()) do
+                                if(Instance:IsA('BasePart')) then
+                                    self:OptimizeValue(Instance, 'Transparency', 1, 3)
+                                end
+                            end
+                        end
+                    end)
+                    if(Inst:IsA('Decal') or Inst:IsA('Texture')) then
+                        self:OptimizeValue(Inst, 'Transparency', 1, 3)
+                    elseif(Inst:IsA('ParticleEmitter') or Inst:IsA('Trail')) then
+                        self:OptimizeValue(Inst, 'Lifetime', NumberRange.new(0), 3)
+                    elseif(Inst:IsA('Explosion')) then
+                        self:OptimizeValue(Inst, 'BlastPressure', 1, 3)
+                        self:OptimizeValue(Inst, 'BlastRadius', 1, 3)
+                    elseif(Inst:IsA('Fire') or Inst:IsA('SpotLight') or Inst:IsA('Smoke') or Inst:IsA('Sparkles') or Inst:IsA('PostEffect')) then
+                        self:OptimizeValue(Inst, 'Enabled', false, 3)
+                    elseif(Inst:IsA('BasePart')) then
+                        self:OptimizeValue(Inst, 'Material', 'Plastic', 3)
+                        self:OptimizeValue(Inst, 'Reflectance', 0, 3)
+                        self:OptimizeValue(Inst, 'TopSurface', 'Smooth', 3)
+                        self:OptimizeValue(Inst, 'BottomSurface', 'Smooth', 3)
+                        self:OptimizeValue(Inst, 'LeftSurface', 'Smooth', 3)
+                        self:OptimizeValue(Inst, 'RightSurface', 'Smooth', 3)
+                        self:OptimizeValue(Inst, 'FrontSurface', 'Smooth', 3)
+                        self:OptimizeValue(Inst, 'BackSurface', 'Smooth', 3)
+                        if(Inst:IsA('MeshPart')) then
+                            self:OptimizeValue(Inst, 'TextureID', 10385902758728957, 3)
+                        end
+                    end
+                end
+            end)
+        end
+    end
+    self.MLevel = Level
+end
+
+return FPSBooster
