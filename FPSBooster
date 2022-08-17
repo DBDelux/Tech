@@ -114,8 +114,8 @@ function FPSBooster:UpdateBoostLevel(Level)
     end
     if(Level >= 1) then
         self:OptimizeValue(settings().Rendering, 'QualityLevel', 2, 1, true)
-        self:OptimizeValue(Lighting, 'FogEnd', 9e9, 1)
-        self:OptimizeValue(Lighting, 'GlobalShadows', false, 1)
+        self:OptimizeValue(Lighting, 'FogEnd', 9e9, 1, true)
+        self:OptimizeValue(Lighting, 'GlobalShadows', false, 1, true)
         self:OptimizeValue(Terrain, 'WaterWaveSize', 0.5, 1)
         self:OptimizeValue(Terrain, 'WaterReflectance', 0.5, 1)
         self:OptimizeValue(Terrain, 'WaterTransparency', 0.5, 1)
