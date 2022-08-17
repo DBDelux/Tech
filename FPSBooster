@@ -126,8 +126,8 @@ function FPSBooster:UpdateBoostLevel(Level)
         self:OptimizeValue(Terrain, 'WaterReflectance', 0, 2)
         self:OptimizeValue(Terrain, 'WaterTransparency', 0, 2)
         if(sethiddenproperty and gethiddenproperty) then
-            self:OptimizeValue(Terrain, 'Decoration', false, 2)
-            self:OptimizeValue(Lighting, 'Technology', 2, 2)
+            self:OptimizeValue(Terrain, 'Decoration', false, 2, true)
+            self:OptimizeValue(Lighting, 'Technology', 2, 2, true)
         end
         for _, Inst in pairs(Lighting:GetChildren()) do
             if(Inst:IsA('BlurEffect') or Inst:IsA('SunRaysEffect') or Inst:IsA('ColorCorrectionEffect') 
