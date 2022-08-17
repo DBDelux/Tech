@@ -136,13 +136,15 @@ function FPSBooster:UpdateBoostLevel(Level)
     if(Level >= 3) then
         for _, Inst in pairs(workspace:GetDescendants()) do
             if(not(self:IsAPartOfAPlayer(Inst))) then
-                if(Level >= 4 and Inst:IsA('Model') and self:IsInstanceBlacklisted(Inst)) then
-                    for _, Instance in pairs(Inst:GetDescendants()) do
-                        if(Instance:IsA('BasePart')) then
-                            self:OptimizeValue(Instance, 'Transparency', 1, 3)
+                spawn(function()
+                    if(Level >= 4 and Inst:IsA('Model') and self:IsInstanceBlacklisted(Inst)) then
+                        for _, Instance in pairs(Inst:GetDescendants()) do
+                            if(Instance:IsA('BasePart')) then
+                                self:OptimizeValue(Instance, 'Transparency', 1, 3)
+                            end
                         end
                     end
-                end
+                end)
                 if(Inst:IsA('Decal') or Inst:IsA('Texture')) then
                     self:OptimizeValue(Inst, 'Transparency', 1, 3)
                 elseif(Inst:IsA('ParticleEmitter') or Inst:IsA('Trail')) then
