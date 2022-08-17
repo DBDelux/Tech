@@ -142,7 +142,7 @@ function FPSBooster:UpdateBoostLevel(Level)
                     if(Level >= 4 and Inst:IsA('Model') and self:IsInstanceBlacklisted(Inst)) then
                         for _, Instance in pairs(Inst:GetDescendants()) do
                             if(Instance:IsA('BasePart')) then
-                                self:OptimizeValue(Instance, 'Transparency', 1, 3)
+                                self:OptimizeValue(Instance, 'Transparency', 1, 4)
                             end
                         end
                         BlacklistThreadCompleted = true
