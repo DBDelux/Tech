@@ -121,6 +121,7 @@ function FPSBooster:UpdateBoostLevel(Level)
         self:OptimizeValue(Terrain, 'WaterTransparency', 0.5, 1)
     end
     if(Level >= 2) then
+        self:OptimizeValue(settings().Rendering, 'QualityLevel', 1, 1, true)
         self:OptimizeValue(Terrain, 'WaterWaveSize', 0, 2)
         self:OptimizeValue(Terrain, 'WaterReflectance', 0, 2)
         self:OptimizeValue(Terrain, 'WaterTransparency', 0, 2)
