@@ -1,4 +1,4 @@
-local FPSBooster = {MLevel = 1, ModificationMemory = {}, DestructionMemory = {}}
+local FPSBooster = {MLevel = 1, Processing = false, ModificationMemory = {}, DestructionMemory = {}}
 -- MeshPart [RenderFidelity -> Performance]
 
 -------------- SERVICES --------------
@@ -107,6 +107,8 @@ end
 ----------- FUNCTIONS ---------------
 
 function FPSBooster:UpdateBoostLevel(Level)
+    local BlacklistThreadCompleted = not(Level >= 4)
+    self.Processing = true
     if(Level < self.MLevel) then
         self:ResetMemUnderLevel(Level)
     end
@@ -143,6 +145,7 @@ function FPSBooster:UpdateBoostLevel(Level)
                                 self:OptimizeValue(Instance, 'Transparency', 1, 3)
                             end
                         end
+                        BlacklistThreadCompleted = true
                     end
                 end)
                 if(Inst:IsA('Decal') or Inst:IsA('Texture')) then
@@ -170,6 +173,10 @@ function FPSBooster:UpdateBoostLevel(Level)
             end
         end
     end
+    while(not BlacklistThreadCompleted) do
+        task.wait()
+    end
+    self.Processing = false
     self.MLevel = Level
 end
 
