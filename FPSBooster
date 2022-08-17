@@ -139,10 +139,12 @@ function FPSBooster:UpdateBoostLevel(Level)
         for _, Inst in pairs(workspace:GetDescendants()) do
             if(not(self:IsAPartOfAPlayer(Inst))) then
                 spawn(function()
-                    if(Level >= 4 and Inst:IsA('Model') and self:IsInstanceBlacklisted(Inst)) then
-                        for _, Instance in pairs(Inst:GetDescendants()) do
-                            if(Instance:IsA('BasePart')) then
-                                self:OptimizeValue(Instance, 'Transparency', 1, 4)
+                    if(Level >= 4) then
+                        if(Inst:IsA('Model') and self:IsInstanceBlacklisted(Inst)) then
+                            for _, Instance in pairs(Inst:GetDescendants()) do
+                                if(Instance:IsA('BasePart')) then
+                                    self:OptimizeValue(Instance, 'Transparency', 1, 4)
+                                end
                             end
                         end
                         BlacklistThreadCompleted = true
