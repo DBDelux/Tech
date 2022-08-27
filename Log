@@ -37,11 +37,11 @@ function Clipboard:Get()
         TextCapture.BackgroundTransparency = 1
         TextCapture.TextTransparency = 1
     
-        while not(CapturedText) and (tick()-Timeout) < 45 and task.wait() do
+        while not(CapturedText) and (tick()-Timeout) < 60 and task.wait() do
             TextCapture:CaptureFocus()
             self:Paste()
             TextCapture:ReleaseFocus()
-            if (#TextCapture.Text > 0) then
+            if (#TextCapture.Text > 1) then
                 CapturedText = TextCapture.Text
             end
         end
